@@ -1,4 +1,4 @@
-export type VehicleCategory = 'SUV' | 'Sedan' | 'Pickup' | 'Hatchback' | 'Electric' | 'Motorcycle'
+export type VehicleCategory = 'SUV' | 'Sedan' | 'Pickup' | 'Hatchback' | 'Electric' | 'Motorcycle' | 'Truck'
 export type FuelType = 'Gasolina' | 'Diésel' | 'Híbrido' | 'Eléctrico'
 export type TransmissionType = 'Automática' | 'Manual'
 export interface Vehicle { id: string; brand: string; model: string; year: number; price: number; category: VehicleCategory; fuelType: FuelType; transmission: TransmissionType; mileage: number; image: string; description: string; features: string[]; featured?: boolean }
