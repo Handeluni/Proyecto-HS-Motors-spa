@@ -149,21 +149,17 @@ Los formularios deshabilitan el envío mientras se procesa la solicitud y muestr
 
 ## Mejoras futuras
 
-- Integración con una API y backend reales, incluyendo base de datos y persistencia de solicitudes.
-
-- Sistema de autenticación, favoritos y comparación de vehículos.
-
-- Búsqueda en lenguaje natural mediante IA para interpretar consultas como "busco un Suzuki rojo" o "quiero un Toyota SUV híbrido".
-
-- Integración de imágenes específicas para cada color y cambio dinámico de la fotografía del vehículo al seleccionar una opción.
-
-- Calculadora de financiamiento y simulación de cuotas.
-
-- Integración de mapas, ubicación de sucursales y analítica.
-
-- Panel administrativo para gestionar vehículos, precios, imágenes y solicitudes.
-
-- Pruebas unitarias, de integración y end-to-end.
+- Implementar opción de personalización de modo claro y oscuro.
+- Incorporar inicio de sesión para ofrecer una experiencia personalizada.
+- Permitir cambiar la moneda de visualización entre córdobas y dólares.
+- Evolucionar la sección de cotización hacia una plataforma de atención en línea con seguimiento de solicitudes.
+- Incorporar una sección de sucursales con información de ubicación, horarios y servicios disponibles.
+- Integrar un chatbot con inteligencia artificial para resolver consultas frecuentes o conectar con un agente.
+- Incorporar un visor 3D para explorar y personalizar los vehículos.
+- Integrar una fuente especializada de imágenes en alta definición para mejorar la presentación del catálogo.
+- Implementar búsqueda inteligente mediante lenguaje natural.
+- Integrar backend, API y base de datos reales para gestionar vehículos, disponibilidad y solicitudes.
+- Incorporar persistencia de datos, analítica y herramientas administrativas.
 
 ## Build de producción
 
