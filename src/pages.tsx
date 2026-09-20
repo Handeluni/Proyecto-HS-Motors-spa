@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowRight, CalendarDays, CheckCircle2, ChevronLeft, CircleCheck, Search, ShieldCheck, SlidersHorizontal, Sparkles, Users, X } from 'lucide-react'
+import { ArrowRight,  Maximize2, CalendarDays, CheckCircle2, ChevronLeft, CircleCheck, Search, ShieldCheck, SlidersHorizontal, Sparkles, Users, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { UseFormRegister } from 'react-hook-form'
@@ -19,17 +19,242 @@ type SortBy='default'|'price-asc'|'price-desc'|'year-desc'|'year-asc'
 const categories:VehicleCategory[]=['SUV','Sedan','Pickup','Hatchback','Electric','Motorcycle','Truck']; const fuels:FuelType[]=['Gasolina','Diésel','Híbrido','Eléctrico']
 export function VehiclesPage(){const [items,setItems]=useState<Vehicle[]>([]),[loading,setLoading]=useState(true),[failed,setFailed]=useState(false);const [search,setSearch]=useState(''),[category,setCategory]=useState(''),[fuel,setFuel]=useState(''),[maxPrice,setMaxPrice]=useState(''),[sort,setSort]=useState<SortBy>('default'); const load=()=>{setLoading(true);setFailed(false);getVehicles().then(setItems).catch(()=>setFailed(true)).finally(()=>setLoading(false))};useEffect(load,[]);const clear=()=>{setSearch('');setCategory('');setFuel('');setMaxPrice('');setSort('default')};const results=useMemo(()=>items.filter(v=>`${v.brand} ${v.model}`.toLowerCase().includes(search.toLowerCase())).filter(v=>!category||v.category===category).filter(v=>!fuel||v.fuelType===fuel).filter(v=>!maxPrice||v.price<=Number(maxPrice)).sort((a,b)=>sort==='price-asc'?a.price-b.price:sort==='price-desc'?b.price-a.price:sort==='year-desc'?b.year-a.year:sort==='year-asc'?a.year-b.year:0),[items,search,category,fuel,maxPrice,sort]);return <section className="section container"><p className="eyebrow">CATÁLOGO</p><h1 className="page-title">Encuentra tu próximo <em>camino.</em></h1><p className="intro">Explora vehículos ficticios seleccionados para cada forma de moverte.</p><div className="filters"><label className="search"><Search/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Busca marca o modelo"/></label><label><span>Categoría</span><select value={category} onChange={e=>setCategory(e.target.value)}><option value="">Todas</option>{categories.map(x=><option key={x}>{x}</option>)}</select></label><label><span>Combustible</span><select value={fuel} onChange={e=>setFuel(e.target.value)}><option value="">Todos</option>{fuels.map(x=><option key={x}>{x}</option>)}</select></label><label><span>Precio máximo</span><select value={maxPrice} onChange={e=>setMaxPrice(e.target.value)}><option value="">Sin límite</option><option value="20000">Hasta $20,000</option><option value="30000">Hasta $30,000</option><option value="40000">Hasta $40,000</option></select></label><label><span>Ordenar</span><select value={sort} onChange={e=>setSort(e.target.value as SortBy)}><option value="default">Relevancia</option><option value="price-asc">Menor precio</option><option value="price-desc">Mayor precio</option><option value="year-desc">Año más reciente</option><option value="year-asc">Año más antiguo</option></select></label></div><div className="results"><span><SlidersHorizontal/> {results.length} {results.length===1?'vehículo encontrado':'vehículos encontrados'}</span>{(search||category||fuel||maxPrice||sort!=='default')&&<button className="clear" onClick={clear}><X/> Limpiar filtros</button>}</div>{loading?<div className="vehicle-grid">{[1,2,3,4,5,6].map(n=><VehicleSkeleton key={n}/>)}</div>:failed?<ErrorState onRetry={load}/>:results.length?<div className="vehicle-grid">{results.map(v=><VehicleCard key={v.id} vehicle={v}/>)}</div>:<EmptyState onClear={clear}/>}</section>}
 
-export function VehicleDetailPage(){const {id=''}=useParams();const [vehicle,setVehicle]=useState<Vehicle|undefined>(),[loading,setLoading]=useState(true);useEffect(()=>{getVehicleById(id).then(setVehicle).finally(()=>setLoading(false))},[id]);if(loading)return <section className="section container"><div className="detail-skeleton"/></section>;if(!vehicle)return <section className="section container"><div className="state"><Search/><h1>Vehículo no encontrado</h1><p>Puede que el vehículo ya no esté disponible o que el enlace sea incorrecto.</p><Link className="button" to="/vehicles">Regresar al catálogo</Link></div></section>;return <section className="section container"><Link className="back" to="/vehicles"><ChevronLeft/> Volver al catálogo</Link><div className="detail"><img src={vehicle.image} alt={`${vehicle.brand} ${vehicle.model}`}/><div><span className="badge">{vehicle.category}</span><h1>{vehicle.brand}<br/><em>{vehicle.model}</em></h1><p className="price big">{formatPrice(vehicle.price)}</p><div className="detail-specs"><span>Año<strong>{vehicle.year}</strong></span><span>Combustible<strong>{vehicle.fuelType}</strong></span><span>Transmisión<strong>{vehicle.transmission}</strong></span><span>Kilometraje<strong>{vehicle.mileage.toLocaleString()} km</strong></span></div><p>{vehicle.description}</p><h3>Características principales</h3><ul className="feature-list">{vehicle.features.map(x=><li key={x}><CheckCircle2/>{x}</li>)}</ul><div className="form-actions"><Link className="button" to={`/quote?vehicle=${vehicle.id}`}>Solicitar cotización</Link><Link className="button outline" to={`/test-drive?vehicle=${vehicle.id}`}>Agendar prueba de manejo</Link></div></div></div></section>}
+export function VehicleDetailPage(){
+  const {id=''}=useParams();
+
+  const [imageOpen, setImageOpen] = useState(false);
+  
+  const [selectedColor, setSelectedColor] = useState('')
+  
+  const [vehicle,setVehicle]=useState<Vehicle|undefined>(),
+        [loading,setLoading]=useState(true);
+
+  useEffect(()=>{
+    getVehicleById(id)
+      .then(setVehicle)
+      .finally(()=>setLoading(false))
+  },[id]);
+
+  useEffect(() => {
+  if (vehicle?.colors?.length) {
+    setSelectedColor(vehicle.colors[0].name)
+  }
+}, [vehicle])
+
+  // AGREGAR ESTE useEffect AQUÍ
+  useEffect(()=>{
+    if(!imageOpen) return;
+
+    const handleKeyDown=(event:KeyboardEvent)=>{
+      if(event.key==='Escape'){
+        setImageOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown',handleKeyDown);
+
+    const previousOverflow=document.body.style.overflow;
+    document.body.style.overflow='hidden';
+
+    return()=>{
+      document.removeEventListener('keydown',handleKeyDown);
+      document.body.style.overflow=previousOverflow;
+    };
+  },[imageOpen]);
+
+  if(loading)
+    return <section className="section container"><div className="detail-skeleton"/></section>;
+
+  if(!vehicle)
+    return <section className="section container"><div className="state"><Search/><h1>Vehículo no encontrado</h1><p>Puede que el vehículo ya no esté disponible o que el enlace sea incorrecto.</p><Link className="button" to="/vehicles">Regresar al catálogo</Link></div></section>;
+
+  return <section className="section container">
+    <Link className="back" to="/vehicles">
+      <ChevronLeft/> Volver al catálogo
+    </Link>
+
+    <div className="detail">
+
+      {/* AQUÍ CAMBIAMOS LA IMAGEN */}
+      <div className="detail-image">
+        <img
+          src={vehicle.image}
+          alt={`${vehicle.brand} ${vehicle.model}`}
+        />
+
+        <button
+          type="button"
+          className="image-zoom-button"
+          onClick={()=>setImageOpen(true)}
+          aria-label={`Ampliar imagen de ${vehicle.brand} ${vehicle.model}`}
+        >
+          <Maximize2/>
+        </button>
+      </div>
+
+      <div>
+        <span className="badge">{vehicle.category}</span>
+
+        <h1>
+          {vehicle.brand}<br/>
+          <em>{vehicle.model}</em>
+        </h1>
+
+        <p className="price big">{formatPrice(vehicle.price)}</p>
+
+        <div className="vehicle-colors">
+  <div className="vehicle-colors-header">
+    <span>Color</span>
+    <strong>{selectedColor}</strong>
+  </div>
+
+  <div className="color-options">
+    {vehicle.colors.map((color) => (
+      <button
+        key={color.name}
+        type="button"
+        className={`color-option ${
+          selectedColor === color.name ? 'selected' : ''
+        }`}
+        onClick={() => setSelectedColor(color.name)}
+        aria-label={`Seleccionar color ${color.name}`}
+        title={color.name}
+      >
+        <span
+          className="color-swatch"
+          style={{ backgroundColor: color.hex }}
+        />
+      </button>
+    ))}
+  </div>
+</div>
+
+        <div className="detail-specs">
+          <span>Año<strong>{vehicle.year}</strong></span>
+          <span>Combustible<strong>{vehicle.fuelType}</strong></span>
+          <span>Transmisión<strong>{vehicle.transmission}</strong></span>
+          <span>Kilometraje<strong>{vehicle.mileage.toLocaleString()} km</strong></span>
+        </div>
+
+        <p>{vehicle.description}</p>
+
+        <h3>Características principales</h3>
+
+        <ul className="feature-list">
+          {vehicle.features.map(x=>
+            <li key={x}>
+              <CheckCircle2/>{x}
+            </li>
+          )}
+        </ul>
+
+        <div className="form-actions">
+          <Link
+            className="button"
+            to={`/quote?vehicle=${vehicle.id}`}
+          >
+            Solicitar cotización
+          </Link>
+
+          <Link
+            className="button outline"
+            to={`/test-drive?vehicle=${vehicle.id}`}
+          >
+            Agendar prueba de manejo
+          </Link>
+        </div>
+      </div>
+    </div>
+
+    {/* MODAL DE IMAGEN */}
+    {imageOpen && (
+      <div
+        className="image-lightbox"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Imagen ampliada de ${vehicle.brand} ${vehicle.model}`}
+        onClick={()=>setImageOpen(false)}
+      >
+        <button
+          type="button"
+          className="image-lightbox-close"
+          onClick={()=>setImageOpen(false)}
+          aria-label="Cerrar imagen ampliada"
+        >
+          <X/>
+        </button>
+
+        <div
+          className="image-lightbox-content"
+          onClick={(event)=>event.stopPropagation()}
+        >
+          <img
+            src={vehicle.image}
+            alt={`${vehicle.brand} ${vehicle.model}`}
+          />
+        </div>
+      </div>
+    )}
+
+  </section>
+}
 
 export function ServicesPage(){return <section className="section container"><p className="eyebrow">SERVICIOS HS</p><h1 className="page-title">Te cuidamos en cada <em>kilómetro.</em></h1><p className="intro">Soluciones pensadas para que tu relación con el camino sea siempre sencilla.</p><div className="service-grid">{services.map(s=><ServiceCard key={s.id} service={s}/>)}</div><div className="cta slim"><Users/><div><h2>¿Necesitas ayuda para elegir?</h2><p>Recibe asesoría personalizada de nuestro equipo.</p></div><Link className="button light-button" to="/quote">Hablar con un asesor</Link></div></section>}
 
-const phone=/^[0-9+()\s-]{7,}$/
-const quoteSchema=z.object({firstName:z.string().min(2,'Ingresa tu nombre.'),lastName:z.string().min(2,'Ingresa tu apellido.'),email:z.string().email('Ingresa un email válido.'),phone:z.string().regex(phone,'Ingresa un teléfono válido.'),vehicleId:z.string().min(1,'Selecciona un vehículo.'),comments:z.string().max(500,'Máximo 500 caracteres.').optional()})
-const driveSchema=z.object({name:z.string().min(2,'Ingresa tu nombre.'),email:z.string().email('Ingresa un email válido.'),phone:z.string().regex(phone,'Ingresa un teléfono válido.'),vehicleId:z.string().min(1,'Selecciona un vehículo.'),date:z.string().min(1,'Selecciona una fecha.'),time:z.string().min(1,'Selecciona una hora.')})
+const phoneSchema = z
+  .string()
+  .trim()
+  .refine((value) => {
+    const normalized = value.replace(/[\s()-]/g, '')
+    return /^\+?\d{8,15}$/.test(normalized)
+  }, 'Ingresa un teléfono válido. Usa entre 8 y 15 dígitos.')
+
+const quoteSchema = z.object({
+  firstName: z.string().min(2, 'Ingresa tu nombre.'),
+  lastName: z.string().min(2, 'Ingresa tu apellido.'),
+  email: z.string().email('Ingresa un email válido.'),
+  phone: phoneSchema,
+  vehicleId: z.string().min(1, 'Selecciona un vehículo.'),
+  comments: z
+    .string()
+    .max(500, 'Máximo 500 caracteres.')
+    .optional()
+})
+
+const driveSchema = z.object({
+  name: z.string().min(2, 'Ingresa tu nombre.'),
+  email: z.string().email('Ingresa un email válido.'),
+  phone: phoneSchema,
+  vehicleId: z.string().min(1, 'Selecciona un vehículo.'),
+  date: z.string().min(1, 'Selecciona una fecha.'),
+  time: z.string().min(1, 'Selecciona una hora.')
+})
 function Success({title,body}:{title:string;body:string}){return <div className="success"><CheckCircle2/><p className="eyebrow">SOLICITUD RECIBIDA</p><h1>{title}</h1><p>{body}</p><Link className="button" to="/vehicles">Volver al catálogo</Link></div>}
 type VehicleField={vehicleId:string}
 function VehicleSelect({register,error}:{register:unknown;error?:string}){const [vehicles,setVehicles]=useState<Vehicle[]>([]);const vehicleRegister=register as UseFormRegister<VehicleField>;useEffect(()=>{getVehicles().then(setVehicles)},[]);return <label>Vehículo seleccionado<select {...vehicleRegister('vehicleId')}><option value="">Selecciona una opción</option>{vehicles.map(v=><option value={v.id} key={v.id}>{v.brand} {v.model} · {v.year}</option>)}</select>{error&&<small>{error}</small>}</label>}
-export function QuotePage(){const [params]=useSearchParams();const [status,setStatus]=useState<RequestStatus>('initial');const {register,handleSubmit,formState:{errors}}=useForm<z.infer<typeof quoteSchema>>({resolver:zodResolver(quoteSchema),defaultValues:{vehicleId:params.get('vehicle')??''}});const onSubmit=async(data:z.infer<typeof quoteSchema>)=>{setStatus('loading');try{await submitQuote(data);setStatus('success')}catch{setStatus('error')}};if(status==='success')return <section className="form-page"><Success title="Tu cotización está en camino." body="HS Motors recibió tu solicitud. Un asesor se pondrá en contacto contigo muy pronto."/></section>;return <section className="form-page"><div className="form-intro"><p className="eyebrow">COTIZACIÓN PERSONALIZADA</p><h1>Hablemos de tu próximo <em>vehículo.</em></h1><p>Cuéntanos qué te interesa y un asesor HS Motors preparará una propuesta para ti.</p><div><ShieldCheck/><span>Tu información se utilizará únicamente para atender esta solicitud.</span></div></div><form className="form-card" onSubmit={handleSubmit(onSubmit)} noValidate><h2>Solicita tu cotización</h2><div className="form-grid"><label>Nombre<input {...register('firstName')} />{errors.firstName&&<small>{errors.firstName.message}</small>}</label><label>Apellido<input {...register('lastName')} />{errors.lastName&&<small>{errors.lastName.message}</small>}</label></div><label>Email<input type="email" {...register('email')} />{errors.email&&<small>{errors.email.message}</small>}</label><label>Teléfono<input type="tel" {...register('phone')} placeholder="Ej. +505 8888 8888" />{errors.phone&&<small>{errors.phone.message}</small>}</label><VehicleSelect register={register} error={errors.vehicleId?.message}/><label>Comentarios <span className="optional">(opcional)</span><textarea rows={4} {...register('comments')} placeholder="¿Hay algo más que debamos saber?" />{errors.comments&&<small>{errors.comments.message}</small>}</label>{status==='error'&&<p className="form-error">No pudimos enviar tu solicitud. Inténtalo otra vez.</p>}<button className="button submit" disabled={status==='loading'}>{status==='loading'?'Enviando solicitud…':'Solicitar cotización'} <ArrowRight/></button></form></section>}
-export function TestDrivePage(){const [params]=useSearchParams();const [status,setStatus]=useState<RequestStatus>('initial');const {register,handleSubmit,formState:{errors}}=useForm<z.infer<typeof driveSchema>>({resolver:zodResolver(driveSchema),defaultValues:{vehicleId:params.get('vehicle')??''}});const onSubmit=async(data:z.infer<typeof driveSchema>)=>{setStatus('loading');try{await submitTestDrive(data);setStatus('success')}catch{setStatus('error')}};if(status==='success')return <section className="form-page"><Success title="Tu prueba está agendada." body="HS Motors recibió tu solicitud. Confirmaremos los detalles contigo muy pronto."/></section>;return <section className="form-page"><div className="form-intro"><p className="eyebrow">PRUEBA DE MANEJO</p><h1>La mejor decisión se toma <em>al volante.</em></h1><p>Agenda una prueba sin compromiso y conoce de cerca el vehículo que te interesa.</p><div><Sparkles/><span>Te acompañará un especialista en cada paso.</span></div></div><form className="form-card" onSubmit={handleSubmit(onSubmit)} noValidate><h2>Agenda tu experiencia</h2><label>Nombre completo<input {...register('name')} />{errors.name&&<small>{errors.name.message}</small>}</label><label>Email<input type="email" {...register('email')} />{errors.email&&<small>{errors.email.message}</small>}</label><label>Teléfono<input type="tel" {...register('phone')} placeholder="Ej. +505 8888 8888" />{errors.phone&&<small>{errors.phone.message}</small>}</label><VehicleSelect register={register} error={errors.vehicleId?.message}/><div className="form-grid"><label>Fecha<input type="date" min={new Date().toISOString().split('T')[0]} {...register('date')} />{errors.date&&<small>{errors.date.message}</small>}</label><label>Hora<select {...register('time')}><option value="">Selecciona</option><option>09:00</option><option>11:00</option><option>14:00</option><option>16:00</option></select>{errors.time&&<small>{errors.time.message}</small>}</label></div>{status==='error'&&<p className="form-error">No pudimos agendar la prueba. Inténtalo otra vez.</p>}<button className="button submit" disabled={status==='loading'}>{status==='loading'?'Agendando…':'Agendar prueba de manejo'} <ArrowRight/></button></form></section>}
+export function QuotePage(){const [params]=useSearchParams();const [status,setStatus]=useState<RequestStatus>('initial');const {register,handleSubmit,formState:{errors}}=useForm<z.infer<typeof quoteSchema>>({resolver:zodResolver(quoteSchema),defaultValues:{vehicleId:params.get('vehicle')??''}});const onSubmit=async(data:z.infer<typeof quoteSchema>)=>{setStatus('loading');try{await submitQuote(data);setStatus('success')}catch{setStatus('error')}};if(status==='success')return <section className="form-page"><Success title="Tu cotización está en camino." body="HS Motors recibió tu solicitud. Un asesor se pondrá en contacto contigo muy pronto."/></section>;return <section className="form-page"><div className="form-intro"><p className="eyebrow">COTIZACIÓN PERSONALIZADA</p><h1>Hablemos de tu próximo <em>vehículo.</em></h1><p>Cuéntanos qué te interesa y un asesor HS Motors preparará una propuesta para ti.</p><div><ShieldCheck/><span>Tu información se utilizará únicamente para atender esta solicitud.</span></div></div><form className="form-card" onSubmit={handleSubmit(onSubmit)} noValidate><h2>Solicita tu cotización</h2><div className="form-grid"><label>Nombre<input {...register('firstName')} />{errors.firstName&&<small>{errors.firstName.message}</small>}</label><label>Apellido<input {...register('lastName')} />{errors.lastName&&<small>{errors.lastName.message}</small>}</label></div><label>Email<input type="email" {...register('email')} />{errors.email&&<small>{errors.email.message}</small>}</label><label>
+  Teléfono
+  <input
+    type="tel"
+    inputMode="tel"
+    autoComplete="tel"
+    maxLength={20}
+    {...register('phone')}
+    placeholder="Ej. +505 8888 8888"
+  />
+  {errors.phone && <small>{errors.phone.message}</small>}
+</label><VehicleSelect register={register} error={errors.vehicleId?.message}/><label>Comentarios <span className="optional">(opcional)</span><textarea rows={4} {...register('comments')} placeholder="¿Hay algo más que debamos saber?" />{errors.comments&&<small>{errors.comments.message}</small>}</label>{status==='error'&&<p className="form-error">No pudimos enviar tu solicitud. Inténtalo otra vez.</p>}<button className="button submit" disabled={status==='loading'}>{status==='loading'?'Enviando solicitud…':'Solicitar cotización'} <ArrowRight/></button></form></section>}
+export function TestDrivePage(){const [params]=useSearchParams();const [status,setStatus]=useState<RequestStatus>('initial');const {register,handleSubmit,formState:{errors}}=useForm<z.infer<typeof driveSchema>>({resolver:zodResolver(driveSchema),defaultValues:{vehicleId:params.get('vehicle')??''}});const onSubmit=async(data:z.infer<typeof driveSchema>)=>{setStatus('loading');try{await submitTestDrive(data);setStatus('success')}catch{setStatus('error')}};if(status==='success')return <section className="form-page"><Success title="Tu prueba está agendada." body="HS Motors recibió tu solicitud. Confirmaremos los detalles contigo muy pronto."/></section>;return <section className="form-page"><div className="form-intro"><p className="eyebrow">PRUEBA DE MANEJO</p><h1>La mejor decisión se toma <em>al volante.</em></h1><p>Agenda una prueba sin compromiso y conoce de cerca el vehículo que te interesa.</p><div><Sparkles/><span>Te acompañará un especialista en cada paso.</span></div></div><form className="form-card" onSubmit={handleSubmit(onSubmit)} noValidate><h2>Agenda tu experiencia</h2><label>Nombre completo<input {...register('name')} />{errors.name&&<small>{errors.name.message}</small>}</label><label>Email<input type="email" {...register('email')} />{errors.email&&<small>{errors.email.message}</small>}</label><label>
+  Teléfono
+  <input
+    type="tel"
+    inputMode="tel"
+    autoComplete="tel"
+    maxLength={20}
+    {...register('phone')}
+    placeholder="Ej. +505 8888 8888"
+  />
+  {errors.phone && <small>{errors.phone.message}</small>}
+</label><VehicleSelect register={register} error={errors.vehicleId?.message}/><div className="form-grid"><label>Fecha<input type="date" min={new Date().toISOString().split('T')[0]} {...register('date')} />{errors.date&&<small>{errors.date.message}</small>}</label><label>Hora<select {...register('time')}><option value="">Selecciona</option><option>09:00</option><option>11:00</option><option>14:00</option><option>16:00</option></select>{errors.time&&<small>{errors.time.message}</small>}</label></div>{status==='error'&&<p className="form-error">No pudimos agendar la prueba. Inténtalo otra vez.</p>}<button className="button submit" disabled={status==='loading'}>{status==='loading'?'Agendando…':'Agendar prueba de manejo'} <ArrowRight/></button></form></section>}
 export function NotFoundPage(){return <section className="section container"><div className="state"><p className="eyebrow">ERROR 404</p><h1>Esta ruta no existe.</h1><p>Volvamos a un lugar conocido.</p><Link className="button" to="/">Ir al inicio</Link></div></section>}
  

@@ -1,7 +1,29 @@
 import type { Vehicle } from '../types'
-type Seed = Omit<Vehicle, 'description' | 'features'>
-const features: Record<Vehicle['category'], string[]> = { SUV:['Control de estabilidad','Cámara de reversa','Aire acondicionado'],Sedan:['Control de estabilidad','Sensores traseros','Pantalla multimedia'],Pickup:['Capacidad de carga','Cámara de reversa','Tracción reforzada'],Hatchback:['Frenos ABS','Bluetooth','Aire acondicionado'],Electric:['Conectividad','Asistencias de conducción','Pantalla multimedia'],Motorcycle:['Freno de disco','Iluminación LED','Panel digital'],Truck:['Chasis de trabajo','Frenos reforzados','Capacidad de carga'] }
-const v=(seed:Seed):Vehicle=>({...seed,description:`${seed.brand} ${seed.model}: modelo mostrado con imagen local correspondiente. Precio referencial en córdobas; confirme versión y disponibilidad con un asesor.`,features:features[seed.category]})
+type Seed = Omit<Vehicle, 'description' | 'features' | 'colors'>
+const features: Record<Vehicle['category'], string[]> = {
+  SUV:['Control de estabilidad','Cámara de reversa','Aire acondicionado'],
+  Sedan:['Control de estabilidad','Sensores traseros','Pantalla multimedia'],
+  Pickup:['Capacidad de carga','Cámara de reversa','Tracción reforzada'],
+  Hatchback:['Frenos ABS','Bluetooth','Aire acondicionado'],
+  Electric:['Conectividad','Asistencias de conducción','Pantalla multimedia'],
+  Motorcycle:['Freno de disco','Iluminación LED','Panel digital'],
+  Truck:['Chasis de trabajo','Frenos reforzados','Capacidad de carga']
+}
+
+const defaultColors = [
+  { name: 'Blanco', hex: '#f5f5f5' },
+  { name: 'Negro', hex: '#111111' },
+  { name: 'Gris', hex: '#777777' },
+  { name: 'Rojo', hex: '#b3261e' },
+]
+
+const v=(seed:Seed):Vehicle=>({
+  ...seed,
+  description:`${seed.brand} ${seed.model}: modelo mostrado con imagen local correspondiente. Precio referencial en córdobas; confirme versión y disponibilidad con un asesor.`,
+  features:features[seed.category],
+  colors:defaultColors
+})
+
 // Imágenes locales proporcionadas en images.zip; precios en córdobas nicaragüenses.
 const coreVehicles:Vehicle[]=[
 v({id:'agya',brand:'Toyota',model:'Agya',year:2025,price:567677,category:'Hatchback',fuelType:'Gasolina',transmission:'Manual',mileage:0,image:'/images/toyota/Sedan/AGYA/AgyaTO24.jpg',featured:true}),
@@ -22,11 +44,11 @@ v({id:'seltos',brand:'Kia',model:'Seltos',year:2025,price:1007388,category:'SUV'
 v({id:'sorento',brand:'Kia',model:'Sorento',year:2025,price:2087220,category:'SUV',fuelType:'Gasolina',transmission:'Automática',mileage:0,image:'/images/kia/sorento/medium.webp'}),
 v({id:'sportage',brand:'Kia',model:'Sportage',year:2025,price:1318375,category:'SUV',fuelType:'Gasolina',transmission:'Automática',mileage:0,image:'/images/kia/sportage/medium.webp',featured:true}),
 v({id:'stonic',brand:'Kia',model:'Stonic',year:2025,price:830000,category:'SUV',fuelType:'Gasolina',transmission:'Automática',mileage:0,image:'/images/kia/stonic/medium.webp'}),
-v({id:'hino-200',brand:'Hino',model:'Hino 200 2 Ton',year:2025,price:925000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/HINO%20200%202%20Ton/Hino200-23-UPD.jpg'}),
-v({id:'hino-35',brand:'Hino',model:'Hino 3.5 Ton',year:2025,price:962000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/Hino%203.5%20Ton/300-3_5-4.jpg'}),
-v({id:'hino-55',brand:'Hino',model:'Hino 300 5.5 Ton',year:2025,price:1165500,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/HINO%20300%205.5%20Ton/300-5-7-4.jpg'}),
-v({id:'hino-500',brand:'Hino',model:'Hino 500 12 Ton',year:2025,price:1850000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/HINO%20%20500%2012%20Ton/500-18-4.jpg'}),
-v({id:'hino-700',brand:'Hino',model:'Hino 700 Cabezal',year:2025,price:2600000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/HINO%20700%20Cabezal/Hino700-profile-.jpg'}),
+v({id:'hino-200',brand:'Hino',model:'200 2 Ton',year:2025,price:925000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/HINO%20200%202%20Ton/Hino200-23-UPD.jpg'}),
+v({id:'hino-35',brand:'Hino',model:'3.5 Ton',year:2025,price:962000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/Hino%203.5%20Ton/300-3_5-4.jpg'}),
+v({id:'hino-55',brand:'Hino',model:'300 5.5 Ton',year:2025,price:1165500,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/HINO%20300%205.5%20Ton/300-5-7-4.jpg'}),
+v({id:'hino-500',brand:'Hino',model:'500 12 Ton',year:2025,price:1850000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/HINO%20%20500%2012%20Ton/500-18-4.jpg'}),
+v({id:'hino-700',brand:'Hino',model:'700 Cabezal',year:2025,price:2600000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/HINO%20700%20Cabezal/Hino700-profile-.jpg'}),
 v({id:'hino-l6',brand:'Hino',model:'L6',year:2025,price:2100000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/L6/L6_Box_Tight_Angle_Pass.png'}),
 v({id:'hino-xl',brand:'Hino',model:'XL',year:2025,price:2900000,category:'Truck',fuelType:'Diésel',transmission:'Manual',mileage:0,image:'/images/hino/XL/XL_Tractor-3-4_Driver.png'}),
 v({id:'fz150',brand:'Yamaha',model:'FZ 150',year:2025,price:101816,category:'Motorcycle',fuelType:'Gasolina',transmission:'Manual',mileage:0,image:'/images/yamaha/FZ%20150/c-azul-1100w.avif'}),
